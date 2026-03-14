@@ -20,33 +20,22 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("all")
-    public ResponseEntity<List<UserEntity>> getAllUsers(){
-        Optional<List<UserEntity>> response = userService.getUsers();
-        return response.map(users -> new ResponseEntity<>(users , HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(HttpStatus.NO_CONTENT));
-    }
-
     @GetMapping("getUserById/{id}")
     public ResponseEntity<?> getUserById(@PathVariable ObjectId id){
         Optional<UserEntity> response = userService.getUserById(id);
         return response.map(user -> new ResponseEntity<>(user , HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @PostMapping("/add")
-    public ResponseEntity<?> addUser(@RequestBody UserEntity userEntity){
-        Optional<UserEntity> response = userService.addUser(userEntity);
-        return response.map(user -> new ResponseEntity<>(user , HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
 
-    @PutMapping("update/{userName}")
-    public ResponseEntity<?> updateUser(@RequestBody UserEntity userEntity , @PathVariable String userName){
-        Optional<UserEntity> response = userService.updateUser(userEntity , userName);
+    @PutMapping("update")
+    public ResponseEntity<?> updateUser(@RequestBody UserEntity userEntity){
+        Optional<UserEntity> response = userService.updateUserDetails(userEntity);
         return response.map(user -> new ResponseEntity<>(user , HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(HttpStatus.NO_CONTENT));
     }
 
     @DeleteMapping("delete")
-    public ResponseEntity<?> deleteUser(@RequestParam(defaultValue = "") String userName){
-        userService.deleteUserByName(userName);
+    public ResponseEntity<?> deleteUser(){
+        userService.deleteUserByName();
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

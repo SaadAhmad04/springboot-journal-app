@@ -24,4 +24,5 @@ public class UserEntity {
     private String password;
     @DBRef
     private List<JournalEntity> journalEntityList = new ArrayList<>();
+    private List<String> roles = new ArrayList<>();
 }

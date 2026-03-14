@@ -24,24 +24,24 @@ public class JournalService {
         this.userService = userService;
     }
 
-    public Optional<List<JournalEntity>> getJournalsForUser(String userName){
-        UserEntity user = userService.findByUserName(userName);
+    public Optional<List<JournalEntity>> getJournalsForUser(){
+        UserEntity user = userService.findByUserName(userService.getUsername());
         return Optional.of(user.getJournalEntityList());
     }
 
     @Transactional
-    public Optional<JournalEntity> addJournalForUser(JournalEntity journalEntity , String userName){
+    public Optional<JournalEntity> addJournalForUser(JournalEntity journalEntity){
         LocalDateTime current = LocalDateTime.now();
         journalEntity.setLocalDateTime(current);
         JournalEntity saved = journalRepo.insert(journalEntity);
 
-        UserEntity user = userService.findByUserName(userName);
+        UserEntity user = userService.findByUserName(userService.getUsername());
         user.getJournalEntityList().add(saved);
-        userService.updateUser(user , userName);
+        userService.updateUserJournals(user);
         return Optional.of(journalEntity);
     }
 
-    public Optional<JournalEntity> updateJournal(JournalEntity journalEntity , ObjectId id , String userName){
+    public Optional<JournalEntity> updateJournal(JournalEntity journalEntity , ObjectId id){
         JournalEntity oldEntry = getJournalById(id).orElse(null);
         if(oldEntry != null){
             oldEntry.setTitle(journalEntity.getTitle() != null && !journalEntity.getTitle().trim().isEmpty() ? journalEntity.getTitle() : oldEntry.getTitle());
@@ -55,13 +55,25 @@ public class JournalService {
     }
 
     public Optional<JournalEntity> getJournalById(ObjectId id){
-        return journalRepo.findById(id);
+        UserEntity user = userService.findByUserName(userService.getUsername());
+        JournalEntity journalEntity = user.getJournalEntityList().stream().filter(journal -> journal.getId().equals(id)).findFirst().orElse(null);
+        if(journalEntity != null){
+            return Optional.of(journalEntity);
+        }
+        return Optional.empty();
     }
-    
-    public void deleteJournalById(ObjectId id , String userName){
-        UserEntity user = userService.findByUserName(userName);
-        user.getJournalEntityList().removeIf(journal -> journal.getId().equals(id));
-        userService.updateUser(user , userName);
-        journalRepo.deleteById(id);
+
+    public boolean deleteJournalById(ObjectId id){
+
+        UserEntity user = userService.findByUserName(userService.getUsername());
+        JournalEntity journalEntity = user.getJournalEntityList().stream().filter(journal -> journal.getId().equals(id)).findFirst().orElse(null);
+        if(journalEntity != null){
+            user.getJournalEntityList().remove(journalEntity);
+            userService.updateUserJournals(user);
+            journalRepo.deleteById(id);
+        }
+
+        return journalEntity != null;
+
     }
 }
